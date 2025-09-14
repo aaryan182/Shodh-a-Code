@@ -1,0 +1,92 @@
+# Secure Code Execution Judge Docker Image
+FROM ubuntu:20.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Update package lists and install required packages
+RUN apt-get update && apt-get install -y \
+    # Java Development Kit
+    openjdk-11-jdk \
+    # Python runtime and package manager
+    python3 \
+    python3-pip \
+    # Node.js runtime and package manager
+    nodejs \
+    npm \
+    # C/C++ compilers
+    gcc \
+    g++ \
+    # System utilities for resource management
+    coreutils \
+    util-linux \
+    procps \
+    # Additional security and utility tools
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user 'coderunner' with limited permissions
+RUN groupadd -r coderunner && \
+    useradd -r -g coderunner -m -s /bin/bash coderunner && \
+    # Create home directory with proper permissions
+    mkdir -p /home/coderunner && \
+    chown -R coderunner:coderunner /home/coderunner
+
+# Set Java environment variables
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# Create working directory for code execution
+RUN mkdir -p /tmp/execution && \
+    chown -R coderunner:coderunner /tmp/execution && \
+    chmod 755 /tmp/execution
+
+# Create directory for execution scripts
+RUN mkdir -p /usr/local/bin/judge && \
+    chown root:root /usr/local/bin/judge && \
+    chmod 755 /usr/local/bin/judge
+
+# Copy execution scripts
+COPY run_java.sh /usr/local/bin/judge/
+COPY run_python.sh /usr/local/bin/judge/
+COPY run_cpp.sh /usr/local/bin/judge/
+
+# Set proper permissions for scripts
+RUN chmod +x /usr/local/bin/judge/*.sh && \
+    chown root:root /usr/local/bin/judge/*.sh
+
+# Configure security settings and resource limits
+# Create limits configuration for the coderunner user
+RUN echo "coderunner soft nproc 64" >> /etc/security/limits.conf && \
+    echo "coderunner hard nproc 128" >> /etc/security/limits.conf && \
+    echo "coderunner soft nofile 256" >> /etc/security/limits.conf && \
+    echo "coderunner hard nofile 512" >> /etc/security/limits.conf && \
+    echo "coderunner soft fsize 10240" >> /etc/security/limits.conf && \
+    echo "coderunner hard fsize 20480" >> /etc/security/limits.conf && \
+    echo "coderunner soft cpu 30" >> /etc/security/limits.conf && \
+    echo "coderunner hard cpu 60" >> /etc/security/limits.conf
+
+# Configure sudoers to prevent privilege escalation
+RUN echo "coderunner ALL=NOPASSWD: /bin/false" >> /etc/sudoers.d/coderunner && \
+    chmod 440 /etc/sudoers.d/coderunner
+
+# Remove potentially dangerous commands and set restricted PATH
+RUN rm -f /bin/su /usr/bin/sudo /usr/bin/passwd /usr/bin/chsh /usr/bin/chfn && \
+    rm -f /usr/bin/wget /usr/bin/curl /usr/bin/ssh /usr/bin/scp
+
+# Set working directory
+WORKDIR /tmp/execution
+
+# Set restricted environment for coderunner user
+USER coderunner
+
+# Set limited PATH for security
+ENV PATH=/usr/local/bin/judge:/usr/bin:/bin:$JAVA_HOME/bin
+
+# Default command
+CMD ["/bin/bash"]
+
+# Health check to verify all required tools are available
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD java -version && python3 --version && node --version && gcc --version || exit 1

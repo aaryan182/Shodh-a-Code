@@ -1,0 +1,279 @@
+spring:
+  application:
+    name: coding-contest-platform
+
+  # PostgreSQL Database Configuration with Optimized Connection Pooling
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:coding_contest_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # Connection Pool Optimization
+      maximum-pool-size: ${DB_MAX_POOL_SIZE:50}        # Increased for high concurrency
+      minimum-idle: ${DB_MIN_IDLE:10}                  # Higher minimum for better responsiveness
+      idle-timeout: ${DB_IDLE_TIMEOUT:300000}          # 5 minutes
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000} # 30 seconds
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}         # 30 minutes - prevents stale connections
+      validation-timeout: ${DB_VALIDATION_TIMEOUT:5000} # 5 seconds
+      leak-detection-threshold: ${DB_LEAK_DETECTION:60000} # 1 minute - detect connection leaks
+      
+      # Connection Pool Performance Tuning
+      pool-name: "CodingContestHikariCP"
+      auto-commit: false                               # Better transaction control
+      read-only: false
+      isolation-level: TRANSACTION_READ_COMMITTED
+      
+      # Connection Properties for PostgreSQL Optimization
+      data-source-properties:
+        cachePrepStmts: true                          # Enable prepared statement caching
+        prepStmtCacheSize: 250                        # Cache size for prepared statements
+        prepStmtCacheSqlLimit: 2048                   # SQL length limit for caching
+        useServerPrepStmts: true                      # Use server-side prepared statements
+        useLocalSessionState: true                    # Optimize session state
+        rewriteBatchedStatements: true                # Optimize batch operations
+        cacheResultSetMetadata: true                  # Cache result set metadata
+        cacheServerConfiguration: true               # Cache server configuration
+        elideSetAutoCommits: true                     # Optimize auto-commit calls
+        maintainTimeStats: false                      # Disable time stats for performance
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        generate_statistics: false
+    open-in-view: false
+
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: true
+    out-of-order: false
+    table: flyway_schema_history
+    sql-migration-prefix: V
+    sql-migration-separator: __
+    sql-migration-suffixes: .sql
+    placeholder-replacement: false
+
+  # Jackson Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: true
+    deserialization:
+      fail-on-unknown-properties: false
+    time-zone: UTC
+
+  # Redis Configuration for Caching
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+    timeout: ${REDIS_TIMEOUT:2000ms}
+    lettuce:
+      pool:
+        max-active: ${REDIS_POOL_MAX_ACTIVE:20}      # Maximum number of connections
+        max-idle: ${REDIS_POOL_MAX_IDLE:8}           # Maximum idle connections
+        min-idle: ${REDIS_POOL_MIN_IDLE:2}           # Minimum idle connections
+        max-wait: ${REDIS_POOL_MAX_WAIT:1000ms}      # Maximum wait time for connection
+      shutdown-timeout: ${REDIS_SHUTDOWN_TIMEOUT:100ms}
+    connect-timeout: ${REDIS_CONNECT_TIMEOUT:1000ms}
+    
+  # Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: ${CACHE_DEFAULT_TTL:1800000}     # 30 minutes default TTL
+      cache-null-values: false                       # Don't cache null values
+      use-key-prefix: true
+      key-prefix: "contest-platform:"
+
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET:your-secret-key-here-change-in-production}
+      expiration: 86400000 # 24 hours
+
+# Server Configuration with Performance Optimizations
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  error:
+    include-message: always
+    include-binding-errors: always
+  # HTTP/2 and Compression Configuration
+  http2:
+    enabled: ${HTTP2_ENABLED:true}
+  compression:
+    enabled: ${COMPRESSION_ENABLED:true}
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,text/css,text/javascript,application/javascript
+    min-response-size: ${COMPRESSION_MIN_SIZE:1024}    # 1KB minimum
+  # Connection and Thread Configuration
+  tomcat:
+    max-connections: ${TOMCAT_MAX_CONNECTIONS:8192}     # Maximum concurrent connections
+    accept-count: ${TOMCAT_ACCEPT_COUNT:100}            # Queue size for incoming connections
+    threads:
+      max: ${TOMCAT_MAX_THREADS:200}                    # Maximum worker threads
+      min-spare: ${TOMCAT_MIN_SPARE_THREADS:10}         # Minimum spare threads
+    connection-timeout: ${TOMCAT_CONNECTION_TIMEOUT:20000} # 20 seconds
+    keep-alive-timeout: ${TOMCAT_KEEP_ALIVE_TIMEOUT:20000} # 20 seconds
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.codingcontest.platform: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: ${SQL_LOGGING_LEVEL:INFO}
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    REQUEST_LOGGER: INFO
+    METRICS: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{requestId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{requestId:-}] %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 1GB
+
+# Custom application properties
+app:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}
+  contest:
+    max-duration-hours: ${MAX_CONTEST_DURATION:24}
+    max-problems-per-contest: ${MAX_PROBLEMS:50}
+  code-execution:
+    timeout-seconds: ${CODE_TIMEOUT:30}
+    memory-limit-mb: ${MEMORY_LIMIT:256}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    endpoints:
+      "POST:/api/submissions":
+        max-requests: ${SUBMISSION_RATE_LIMIT:10}
+        window-seconds: ${SUBMISSION_RATE_WINDOW:60}
+      "POST:/api/users/register":
+        max-requests: ${REGISTER_RATE_LIMIT:5}
+        window-seconds: ${REGISTER_RATE_WINDOW:300}
+      "POST:/api/auth/login":
+        max-requests: ${LOGIN_RATE_LIMIT:10}
+        window-seconds: ${LOGIN_RATE_WINDOW:300}
+      "GET:/api/contests":
+        max-requests: ${CONTEST_RATE_LIMIT:30}
+        window-seconds: ${CONTEST_RATE_WINDOW:60}
+      "default":
+        max-requests: ${DEFAULT_RATE_LIMIT:100}
+        window-seconds: ${DEFAULT_RATE_WINDOW:60}
+
+# Judge System Configuration with Performance Optimization
+judge:
+  docker:
+    image: ${JUDGE_DOCKER_IMAGE:judge-executor:latest}
+    # Resource limits for better performance and security
+    cpu-limit: ${JUDGE_CPU_LIMIT:1.0}                    # CPU cores limit
+    memory-limit: ${JUDGE_MEMORY_LIMIT:512m}             # Memory limit
+    swap-limit: ${JUDGE_SWAP_LIMIT:0}                    # Disable swap
+    network-mode: ${JUDGE_NETWORK_MODE:none}             # No network access
+    # Container optimization
+    remove-containers: ${JUDGE_REMOVE_CONTAINERS:true}   # Auto-remove containers
+    parallel-executions: ${JUDGE_PARALLEL_EXECUTIONS:10} # Max parallel executions
+  timeout:
+    default: ${JUDGE_TIMEOUT_DEFAULT:10}
+    compilation: ${JUDGE_COMPILATION_TIMEOUT:30}         # Compilation timeout
+    cleanup: ${JUDGE_CLEANUP_TIMEOUT:5}                  # Cleanup timeout
+  memory:
+    default: ${JUDGE_MEMORY_DEFAULT:256}
+    max: ${JUDGE_MEMORY_MAX:512}                         # Maximum memory allowed
+  temp:
+    directory: ${JUDGE_TEMP_DIR:/tmp/judge}
+    cleanup-interval: ${JUDGE_CLEANUP_INTERVAL:300}      # Cleanup every 5 minutes
+
+# Performance and Caching Configuration
+app:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}
+  contest:
+    max-duration-hours: ${MAX_CONTEST_DURATION:24}
+    max-problems-per-contest: ${MAX_PROBLEMS:50}
+  code-execution:
+    timeout-seconds: ${CODE_TIMEOUT:30}
+    memory-limit-mb: ${MEMORY_LIMIT:256}
+  
+  # Cache Configuration
+  cache:
+    redis:
+      enabled: ${CACHE_REDIS_ENABLED:true}
+    caffeine:
+      enabled: ${CACHE_CAFFEINE_ENABLED:true}
+    # Cache TTL settings (in seconds)
+    ttl:
+      contests: ${CACHE_TTL_CONTESTS:3600}               # 1 hour
+      problems: ${CACHE_TTL_PROBLEMS:7200}               # 2 hours
+      leaderboard: ${CACHE_TTL_LEADERBOARD:300}          # 5 minutes
+      users: ${CACHE_TTL_USERS:1800}                     # 30 minutes
+      test-cases: ${CACHE_TTL_TEST_CASES:14400}          # 4 hours
+  
+  # Performance Monitoring
+  monitoring:
+    enabled: ${MONITORING_ENABLED:true}
+    metrics:
+      enabled: ${METRICS_ENABLED:true}
+      export-interval: ${METRICS_EXPORT_INTERVAL:60}    # Export every minute
+    health-checks:
+      enabled: ${HEALTH_CHECKS_ENABLED:true}
+      interval: ${HEALTH_CHECK_INTERVAL:30}             # Check every 30 seconds
+  
+  # Async Processing Optimization
+  async:
+    submission-processor:
+      core-pool-size: ${ASYNC_SUBMISSION_CORE_POOL:8}
+      max-pool-size: ${ASYNC_SUBMISSION_MAX_POOL:25}
+      queue-capacity: ${ASYNC_SUBMISSION_QUEUE:200}
+    task-executor:
+      core-pool-size: ${ASYNC_TASK_CORE_POOL:3}
+      max-pool-size: ${ASYNC_TASK_MAX_POOL:10}
+      queue-capacity: ${ASYNC_TASK_QUEUE:50}
+  
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    endpoints:
+      "POST:/api/submissions":
+        max-requests: ${SUBMISSION_RATE_LIMIT:10}
+        window-seconds: ${SUBMISSION_RATE_WINDOW:60}
+      "POST:/api/users/register":
+        max-requests: ${REGISTER_RATE_LIMIT:5}
+        window-seconds: ${REGISTER_RATE_WINDOW:300}
+      "POST:/api/auth/login":
+        max-requests: ${LOGIN_RATE_LIMIT:10}
+        window-seconds: ${LOGIN_RATE_WINDOW:300}
+      "GET:/api/contests":
+        max-requests: ${CONTEST_RATE_LIMIT:30}
+        window-seconds: ${CONTEST_RATE_WINDOW:60}
+      "default":
+        max-requests: ${DEFAULT_RATE_LIMIT:100}
+        window-seconds: ${DEFAULT_RATE_WINDOW:60}
