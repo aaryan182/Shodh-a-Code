@@ -88,30 +88,30 @@ The Coding Contest Platform is a comprehensive solution for hosting competitive 
 
 ```mermaid
 graph TB
-    subgraph "Client Layer"
+    subgraph Client["Client Layer"]
         WEB[Web Browser]
         MOBILE[Mobile App]
     end
 
-    subgraph "Load Balancer"
+    subgraph LoadBalancer["Load Balancer"]
         NGINX[Nginx Reverse Proxy]
     end
 
-    subgraph "Application Layer"
-        FRONTEND[Next.js Frontend<br/>Port: 3000]
-        BACKEND[Spring Boot Backend<br/>Port: 8080]
+    subgraph Application["Application Layer"]
+        FRONTEND["Next.js Frontend<br/>Port: 3000"]
+        BACKEND["Spring Boot Backend<br/>Port: 8080"]
     end
 
-    subgraph "Execution Layer"
-        EXECUTOR[Code Executor<br/>Docker Containers]
+    subgraph Execution["Execution Layer"]
+        EXECUTOR["Code Executor<br/>Docker Containers"]
     end
 
-    subgraph "Data Layer"
-        POSTGRES[(PostgreSQL<br/>Database)]
-        REDIS[(Redis Cache)]
+    subgraph Data["Data Layer"]
+        POSTGRES[("PostgreSQL<br/>Database")]
+        REDIS[("Redis Cache")]
     end
 
-    subgraph "Storage"
+    subgraph Storage["Storage"]
         LOGS[Application Logs]
         SUBMISSIONS[Code Submissions]
         RESULTS[Execution Results]
@@ -197,27 +197,27 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    subgraph "API Gateway"
-        NGINX[Nginx<br/>Load Balancer]
+    subgraph Gateway["API Gateway"]
+        NGINX["Nginx<br/>Load Balancer"]
     end
 
-    subgraph "Frontend Services"
-        NEXT[Next.js<br/>SSR/SSG]
+    subgraph Frontend["Frontend Services"]
+        NEXT["Next.js<br/>SSR/SSG"]
         PWA[PWA Features]
     end
 
-    subgraph "Backend Services"
-        AUTH[Auth Service<br/>JWT Management]
-        USER[User Service<br/>Profile Management]
-        CONTEST[Contest Service<br/>Contest Logic]
-        SUBMISSION[Submission Service<br/>Code Processing]
-        JUDGE[Judge Service<br/>Code Execution]
+    subgraph Backend["Backend Services"]
+        AUTH["Auth Service<br/>JWT Management"]
+        USER["User Service<br/>Profile Management"]
+        CONTEST["Contest Service<br/>Contest Logic"]
+        SUBMISSION["Submission Service<br/>Code Processing"]
+        JUDGE["Judge Service<br/>Code Execution"]
     end
 
-    subgraph "Data Services"
-        POSTGRES[(PostgreSQL<br/>Primary Data)]
-        REDIS[(Redis<br/>Cache & Sessions)]
-        LOGS[(Log Storage)]
+    subgraph DataServices["Data Services"]
+        POSTGRES[("PostgreSQL<br/>Primary Data")]
+        REDIS[("Redis<br/>Cache & Sessions")]
+        LOGS[("Log Storage")]
     end
 
     NGINX --> NEXT
@@ -284,13 +284,13 @@ graph LR
 
 ### Code Execution Environment
 
-| Language       | Version | Compiler/Runtime     |
-| -------------- | ------- | -------------------- |
-| **Java**       | 17 LTS  | OpenJDK 17           |
-| **Python**     | 3.11+   | CPython              |
-| **C++**        | 20      | GCC 11+              |
-| **C**          | 18      | GCC 11+              |
-| **JavaScript** | ES2023  | Node.js 18+          |
+| Language       | Version | Compiler/Runtime |
+| -------------- | ------- | ---------------- |
+| **Java**       | 17 LTS  | OpenJDK 17       |
+| **Python**     | 3.11+   | CPython          |
+| **C++**        | 20      | GCC 11+          |
+| **C**          | 18      | GCC 11+          |
+| **JavaScript** | ES2023  | Node.js 18+      |
 
 ## 💻 System Requirements
 
@@ -457,15 +457,15 @@ For complete database schema documentation with ER diagrams, see [DATABASE_SCHEM
 
 ```mermaid
 graph TB
-    subgraph "Core Entities"
+    subgraph CoreEntities["Core Entities"]
         U[Users]
         C[Contests]
         P[Problems]
         S[Submissions]
     end
 
-    subgraph "Relationships"
-        UC[User-Contest<br/>Participation]
+    subgraph Relationships["Relationships"]
+        UC["User-Contest<br/>Participation"]
         TC[Test Cases]
     end
 
@@ -488,24 +488,24 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph "Docker Host"
-        subgraph "Application Containers"
-            FRONTEND[Frontend Container<br/>Next.js + Node.js 18]
-            BACKEND[Backend Container<br/>Spring Boot + OpenJDK 17]
-            EXECUTOR[Code Executor<br/>Multi-language Runtime]
+    subgraph DockerHost["Docker Host"]
+        subgraph AppContainers["Application Containers"]
+            FRONTEND["Frontend Container<br/>Next.js + Node.js 18"]
+            BACKEND["Backend Container<br/>Spring Boot + OpenJDK 17"]
+            EXECUTOR["Code Executor<br/>Multi-language Runtime"]
         end
 
-        subgraph "Data Containers"
-            POSTGRES[PostgreSQL 15<br/>Primary Database]
-            REDIS[Redis 7<br/>Cache & Sessions]
+        subgraph DataContainers["Data Containers"]
+            POSTGRES["PostgreSQL 15<br/>Primary Database"]
+            REDIS["Redis 7<br/>Cache & Sessions"]
         end
 
-        subgraph "Infrastructure"
-            NGINX[Nginx Proxy<br/>Load Balancer]
-            ADMINER[Adminer<br/>DB Admin]
+        subgraph Infrastructure["Infrastructure"]
+            NGINX["Nginx Proxy<br/>Load Balancer"]
+            ADMINER["Adminer<br/>DB Admin"]
         end
 
-        subgraph "Volumes"
+        subgraph Volumes["Volumes"]
             DB_DATA[Database Data]
             REDIS_DATA[Redis Data]
             LOGS[Application Logs]
@@ -619,21 +619,21 @@ EOF
 
 ```mermaid
 graph TD
-    subgraph "Frontend Testing"
-        UNIT_F[Unit Tests<br/>Jest + Testing Library]
-        INTEGRATION_F[Integration Tests<br/>API Mocking]
-        E2E[End-to-End Tests<br/>Playwright]
+    subgraph FrontendTesting["Frontend Testing"]
+        UNIT_F["Unit Tests<br/>Jest + Testing Library"]
+        INTEGRATION_F["Integration Tests<br/>API Mocking"]
+        E2E["End-to-End Tests<br/>Playwright"]
     end
 
-    subgraph "Backend Testing"
-        UNIT_B[Unit Tests<br/>JUnit 5 + Mockito]
-        INTEGRATION_B[Integration Tests<br/>TestContainers]
-        PERFORMANCE[Performance Tests<br/>Load Testing]
+    subgraph BackendTesting["Backend Testing"]
+        UNIT_B["Unit Tests<br/>JUnit 5 + Mockito"]
+        INTEGRATION_B["Integration Tests<br/>TestContainers"]
+        PERFORMANCE["Performance Tests<br/>Load Testing"]
     end
 
-    subgraph "System Testing"
-        DOCKER_TEST[Docker Integration<br/>Full Stack Tests]
-        SECURITY[Security Tests<br/>Vulnerability Scanning]
+    subgraph SystemTesting["System Testing"]
+        DOCKER_TEST["Docker Integration<br/>Full Stack Tests"]
+        SECURITY["Security Tests<br/>Vulnerability Scanning"]
     end
 
     UNIT_F --> INTEGRATION_F
@@ -673,13 +673,13 @@ We welcome contributions! Here's how to get started:
 ```mermaid
 gitGraph
     commit id: "Initial"
-    branch feature/new-feature
-    checkout feature/new-feature
+    branch feature-new-feature
+    checkout feature-new-feature
     commit id: "Feature work"
     commit id: "Add tests"
     commit id: "Update docs"
     checkout main
-    merge feature/new-feature
+    merge feature-new-feature
     commit id: "Release v1.1.0"
 ```
 
@@ -766,5 +766,3 @@ npm run build
 ```
 
 ## Made by Aaryan Bajaj
-
-
